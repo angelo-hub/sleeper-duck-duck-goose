@@ -1,4 +1,5 @@
 import { IPCModule } from 'node-ipc';
+import cache from 'memory-cache';
 
 const heartbeatCheckInterval = 10000;
 
@@ -9,10 +10,13 @@ class ParentTCPServer {
     this.ipc = new IPCModule();
     this.ipc.config.id = 'parent';
     this.ipc.config.retry = 1500;
+    this.ipc.silent = true;
     this.host = host;
     this.port = port;
     this.healthInfo = {
       cluster: {},
+      offline: {},
+      online: {},
       totalServers: 0,
       elections: election,
     };
@@ -26,6 +30,7 @@ class ParentTCPServer {
         this.port,
         () => {
           console.log('parent server started on', this.host, this.port);
+          cache.set('isParent', true);
           this.ipc.server.on('heartbeat', this.onHeartbeat.bind(this));
           this.ipc.server.on('socket.disconnected', this.onSocketDisconnect.bind(this));
           return resolve;
@@ -36,11 +41,12 @@ class ParentTCPServer {
   }
 
   // for if network separation causes the parent to be the lone server,
-  // therefor should downgrade to child process
+  // therefor should downgrade to a child process
   checkHeartBeats() {
     const compareDate = Date.now();
     this.intervalID = setInterval(() => {
-
+      // if cluster's have went offline
+      if (_.size(this.healthInfo.cluster) === 0 && _.size(this.healthInfo.offline) > 0)
     }, heartbeatCheckInterval);
   }
 
@@ -64,6 +70,7 @@ class ParentTCPServer {
   onSocketDisconnect(socket) {
     const { address, port } = socket.address();
     const key = `${address}:${port}`;
+    this.healthInfo.offline[key] = this.healthInfo.cluster[key];
     delete this.healthInfo.cluster[key];
     this.healthInfo.totalServers -= 1;
     this.ipc.server.broadcast(

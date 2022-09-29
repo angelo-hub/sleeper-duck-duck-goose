@@ -69,6 +69,7 @@ class ChildConnection {
 
   async onConnect() {
     this.hasRunNoParentServer = false;
+    cache.set('isParent', false);
     console.log(`connected to ${this.parentSocketID}`);
     // fulling committing to this, set it to a random within 5 seconds and run it on a timeout
   }
