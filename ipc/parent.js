@@ -54,11 +54,11 @@ class ParentTCPServer {
       // if cluster's have went offline since last healthcheck
       const offlineServerAmount = _.size(this.healthInfo.offline);
       // include self in server cluster size
-      if (offlineServerAmount >= this.healthInfo.cluster + 1) {
+      if (offlineServerAmount >= _.size(this.healthInfo.cluster) + 1) {
         // downgrade server using cache so it permeates through app and is retriggered
         cache.put('isParent', false);
       }
-      this.healthInfo.deadServers = this.healthInfo.offline;
+      this.healthInfo.deadServers = { ...this.healthInfo.offline };
       this.healthInfo.offline = {};
       // if this is an offline former parent check for new parent
       // in redis and trigger the child IPC connection

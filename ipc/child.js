@@ -80,7 +80,6 @@ class ChildConnection {
   }
 
   async onDisconnect() {
-    console.log(`disconnected from ${this.parentSocketID}`);
     if (isFunction(this.noParentServer) && this.hasRunNoParentServer === false) {
       // debounce voting
       this.hasRunNoParentServer = true;
