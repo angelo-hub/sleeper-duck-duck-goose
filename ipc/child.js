@@ -69,7 +69,7 @@ class ChildConnection {
 
   async onConnect() {
     this.hasRunNoParentServer = false;
-    cache.set('isParent', false);
+    cache.put('isParent', false);
     console.log(`connected to ${this.parentSocketID}`);
     // fulling committing to this, set it to a random within 5 seconds and run it on a timeout
   }
@@ -90,13 +90,13 @@ class ChildConnection {
 
   async emitHeartBeat() {
     this.intervalID = setInterval(async () => {
-      if (this.heartbeatAttempts === 3) {
+      if (this.heartbeatAttempts >= 3) {
         // Trigger voting sequence
-        // if (isFunction(this.noParentServer) && this.hasRunNoParentServer === false) {
-        //   // debounce voting
-        //   this.hasRunNoParentServer = true;
-        //   this.noParentServer();
-        // }
+        if (isFunction(this.noParentServer) && this.hasRunNoParentServer === false) {
+          // debounce voting
+          this.hasRunNoParentServer = true;
+          this.noParentServer();
+        }
         clearInterval(this.intervalID);
       } else if (this.parentSocketID && this.ipc.of[this.parentSocketID]) {
         this.ipc.of[this.parentSocketID].emit(

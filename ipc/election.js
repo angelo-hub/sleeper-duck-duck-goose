@@ -136,7 +136,7 @@ class ElectionServer {
   }
 
   async onElectionWin() {
-    const { elections = 0, cluster = [] } = cache.get('healthInfo') || {};
+    const { elections = 0, cluster = {} } = cache.get('healthInfo') || {};
     const election = elections + 1;
     console.log('ELECTION RESULTS:');
     console.table(_.reduce(
@@ -179,11 +179,11 @@ class ElectionServer {
   }
 
   sendVoteRequests() {
-    const { elections = 0, cluster = [] } = cache.get('healthInfo') || {};
+    const { elections = 0, cluster = {}, offline = {} } = cache.get('healthInfo') || {};
     const election = elections + 1;
     this.voteForSelf(election);
     // knowingly not ack'ing for a callback on emit
-    _.forEach(cluster, ({ host, port, id }) => {
+    _.forEach({ ...cluster, ...offline }, ({ host, port, id }) => {
       if (this.id !== id) {
         this.ipc.server.emit(
           {

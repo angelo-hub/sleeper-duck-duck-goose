@@ -21,6 +21,7 @@ class Handler {
       electionConfig,
       id: this.serverId,
       election,
+      triggerElection: this.electionServer.sendVoteRequests.bind(this.electionServer),
     });
 
     cache.put('local', {
