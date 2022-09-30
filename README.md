@@ -1,7 +1,7 @@
 # sleeper-duck-duck-goose
 An app that defines one goose, and n amount of ducks
 
-Based the high level voting architecture and tie breaker concepts on this: (medium article around consensus algorithm's within mongodb and couchdb)[https://medium.com/geekculture/raft-consensus-algorithm-and-leader-election-in-mongodb-vs-coachroachdb-19b767c87f95)
+Based the high level voting architecture and tie breaker concepts on this: (medium article around consensus algorithm's within mongodb and couchdb)[https://medium.com/geekculture/raft-consensus-algorithm-and-leader-election-in-mongodb-vs-coachroachdb-19b767c87f95]
 
 
 ## Prerequisites
