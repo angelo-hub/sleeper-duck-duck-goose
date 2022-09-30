@@ -34,4 +34,7 @@ A more seamlessly way to do this would be with a central queue system as the for
 
 ## Limitations
 
-The implimentation as a result of a reliance on class values and loops rather than 2-way message response, it feels more brittle.
+The implementation as a result of a reliance on class values and loops rather than 2-way message response, it feels more brittle.
+
+Not using the exported singleton's within these ipc classes makes things slightly messier as within the handler file coordination needs to happen where rather than directly calling a function on the singleton,
+the function is dependency injected into the constructor. Allows for more isolated unit testing, and clean separation of concerns but makes the code look more verbose.

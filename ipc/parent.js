@@ -2,11 +2,13 @@ import { IPCModule } from 'node-ipc';
 import cache from 'memory-cache';
 import _ from 'lodash';
 
+import redis from '../repository/redis.js';
+
 const heartbeatCheckInterval = 100;
 
 class ParentTCPServer {
   constructor({
-    port, host, id, election = 1, triggerElection,
+    port, host, id, election = 1, startChildServer,
   } = {}) {
     this.ipc = new IPCModule();
     this.ipc.config.id = 'parent';
@@ -23,7 +25,7 @@ class ParentTCPServer {
       elections: election,
     };
     this.id = id;
-    this.triggerElection = triggerElection;
+    this.startChildServer = startChildServer;
     this.lastHeartbeatCheck = Date.now();
   }
 
@@ -41,6 +43,7 @@ class ParentTCPServer {
         },
       );
       this.ipc.server.start();
+      this.checkHeartBeats();
     });
   }
 
@@ -50,16 +53,27 @@ class ParentTCPServer {
     this.intervalID = setInterval(() => {
       // if cluster's have went offline since last healthcheck
       const offlineServerAmount = _.size(this.healthInfo.offline);
-      if (offlineServerAmount > this.healthInfo.cluster) {
-        // downgrade server trigger election
+      // include self in server cluster size
+      if (offlineServerAmount >= this.healthInfo.cluster + 1) {
+        // downgrade server using cache so it permeates through app and is retriggered
         cache.put('isParent', false);
-        if (_.isFunction(this.triggerElection)) {
-          this.triggerElection();
+      }
+      this.healthInfo.deadServers = this.healthInfo.offline;
+      this.healthInfo.offline = {};
+      // if this is an offline former parent check for new parent
+      // in redis and trigger the child IPC connection
+      if (cache.get('isParent') === false) {
+        const { host, port } = redis.getParentHostPort();
+        if (host !== this.host && port !== this.port) {
+          this.endParentServerStartChildServer();
         }
-        this.healthInfo.deadServers = this.healthInfo.offline;
-        this.healthInfo.offline = {};
       }
     }, heartbeatCheckInterval);
+  }
+
+  endParentServerStartChildServer() {
+    this.ipc.server.stop();
+    this.startChildServer();
   }
 
   onHeartbeat(data, socket) {
@@ -81,9 +95,8 @@ class ParentTCPServer {
     );
   }
 
-  onSocketDisconnect(socket) {
-    const { address, port } = socket.address();
-    const key = `${address}:${port}`;
+  onSocketDisconnect(socket, socketId) {
+    const key = _.findKey(this.healthInfo.cluster, { id: socketId });
     this.healthInfo.offline[key] = { ...this.healthInfo.cluster[key], offlineTime: Date.now() };
     delete this.healthInfo.cluster[key];
     this.healthInfo.totalServers -= 1;

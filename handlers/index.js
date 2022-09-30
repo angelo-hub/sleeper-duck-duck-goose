@@ -1,5 +1,3 @@
-import cache from 'memory-cache';
-
 import { ElectionServer } from '../ipc/election.js';
 import { ChildConnection } from '../ipc/child.js';
 import { ParentTCPServer } from '../ipc/parent.js';
@@ -21,13 +19,7 @@ class Handler {
       electionConfig,
       id: this.serverId,
       election,
-      triggerElection: this.electionServer.sendVoteRequests.bind(this.electionServer),
-    });
-
-    cache.put('local', {
-      parentHost: host,
-      parentPort: port,
-      isParent: true,
+      startChildServer: this.startChildConnection.bind(this),
     });
 
     await this.redis.setParentHostPort({ host, port, election });

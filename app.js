@@ -1,5 +1,4 @@
 import express from 'express';
-import logger from 'morgan';
 import crypto from 'crypto';
 import Promise from 'bluebird';
 
@@ -13,7 +12,6 @@ global.Promise = Promise;
 
 const app = express();
 
-app.use(logger('dev'));
 app.use(express.json());
 
 app.use('/', indexRouter);
