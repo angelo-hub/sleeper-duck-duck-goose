@@ -8,13 +8,15 @@ An app that defines one goose, and n amount of ducks
 
 In order to run this application a local redis server is required.
 
-## Design Explenation
+Run `npm start` after running redis locally on the default port
 
-When going through with this I wanted to create a somehow decentrialized solution to create something that could truly be scalable horizontally. I could have relied on restful http connections to communicate but decided using some type of low level UDP port communication would be more effective and similar to how infastructure monitoring tools work.
+## Design Explanation
 
-The concept of primary and secondary servers reminded me of how mongo or other noSQL Db's handle traffic and my solution would impliment a voting system in order to properly
+When going through with this I wanted to create a somehow decentralized solution to create something that could truly be scalable horizontally. I could have relied on restful http connections to communicate but decided using some type of low level UDP port communication would be more effective and similar to how infrastructure monitoring tools work.
 
-The only central-ized system used in this service is redis, and is striclty utilized to initial pull in the last known active primary/parent's host address, in order to avoid having to launch with configuration info as a pre-req.
+The concept of primary and secondary servers reminded me of how mongo or other noSQL Db's handle traffic and my solution would implement a voting system in order to properly
+
+The only centralized system used in this service is redis, and is strictly utilized to initial pull in the last known active primary/parent's host address, in order to avoid having to launch with configuration info as a pre-req.
 
 The primary therefor then acts as a TCP server that child processes can connect to.
 
@@ -38,3 +40,5 @@ The implementation as a result of a reliance on class values and loops rather th
 
 Not using the exported singleton's within these ipc classes makes things slightly messier as within the handler file coordination needs to happen. Rather than directly calling a function on the singleton,
 the function is dependency injected into the constructor. This allows for more isolated unit testing, and clean separation of concerns but makes the code look more verbose.
+
+The network partition logic should most likely take place in the election IPC rather than the parent IPC
